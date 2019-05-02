@@ -262,5 +262,6 @@ __pycache__/
 *.h
 
 #ignored directories
-/DataAnalysisEnvironment/*
+/DataAnalysisVirtualEnvironment/*
 /DataAnalysisVirtualEnv/*
+/.vscode/*
