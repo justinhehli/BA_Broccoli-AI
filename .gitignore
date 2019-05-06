@@ -265,6 +265,7 @@ __pycache__/
 /DataAnalysisEnvironment/*
 /DataAnalysisVirtualEnv/*
 /.vscode/*
+/SegmentationOfData/export*
 
 #ignored files
 *.tif

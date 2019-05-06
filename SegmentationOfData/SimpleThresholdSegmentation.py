@@ -40,7 +40,7 @@ def connectedSeedGrowing(arr):
     seg[seed] = 1
 
     #show if seed is in correct position
-    myshow(sitk.LabelOverlay(img, seg))
+    #myshow(sitk.LabelOverlay(img, seg))
 
     #calculate threshold
     seg_con = sitk.ConnectedThreshold(img, seedList=[seed],lower=100, upper=255)
@@ -53,7 +53,7 @@ def connectedSeedGrowing(arr):
                                             kernel)
     
     #show if thresholding is correct
-    myshow(sitk.LabelOverlay(img, seg_clean))
+    #myshow(sitk.LabelOverlay(img, seg_clean))
 
     #convert back to array
     new_arr = sitk.GetArrayFromImage(seg_con)                             
