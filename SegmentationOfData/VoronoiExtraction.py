@@ -43,8 +43,8 @@ centroids_features = shape.shapeRecords()
 
 
 #open images
-ndvi_src_string = os.path.join(dirname, r'export\20190501RMC_index_ndvi_modified.tif')
-ndre_src_string = os.path.join(dirname, r'export\20190501RMC_index_ndre_modified.tif')
+ndvi_src_string = os.path.join(dirname, r'export\20190425MSC_index_ndvi_transformed.tif')
+ndre_src_string = os.path.join(dirname, r'export\20190425MSC_index_ndre_transformed.tif')
 output_src_string = os.path.join(dirname, r'export')
 image_dir = os.path.join(output_src_string, r'images')
 timestamp = '2019-05-01'
@@ -99,25 +99,26 @@ for feature in features:
     
     writeHTML('<h4>Plot of NDVI and NDRE inside corresponding Voronoi Polygon</h4>')
 
-    #create subfolder for images
-    loop_img_dir = image_dir+'\{}'.format(id)
-    relative_img_dir = r'images\{}'.format(id)
-    if os.path.exists(loop_img_dir) == False and createReport == True:
-        os.mkdir(loop_img_dir)
+    if createReport==True:
+        #create subfolder for images
+        loop_img_dir = image_dir+'\{}'.format(id)
+        relative_img_dir = r'images\{}'.format(id)
+        if os.path.exists(loop_img_dir) == False and createReport == True:
+            os.mkdir(loop_img_dir)
 
-    #plot the figures
-    fig = pyplot.figure()
-    pyplot.subplot(1,2,1)
-    pyplot.imshow(croppedMaskedImageNDVI[0][0])
-    pyplot.title('NDVI image')
+        #plot the figures
+        fig = pyplot.figure()
+        pyplot.subplot(1,2,1)
+        pyplot.imshow(croppedMaskedImageNDVI[0][0])
+        pyplot.title('NDVI image')
 
-    pyplot.subplot(1,2,2)
-    pyplot.imshow(croppedMaskedImageNDRE[0][0])
-    pyplot.title('NDRE image')
+        pyplot.subplot(1,2,2)
+        pyplot.imshow(croppedMaskedImageNDRE[0][0])
+        pyplot.title('NDRE image')
 
-    saveImage((loop_img_dir+r'\ndvi_ndre_voronoi_{}.png'.format(id)))
-    pyplot.close()
-    writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_voronoi_{}.png'.format(id)+'" alt="Voronoi" width="600" height="333">')
+        saveImage((loop_img_dir+r'\ndvi_ndre_voronoi_{}.png'.format(id)))
+        pyplot.close()
+        writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_voronoi_{}.png'.format(id)+'" alt="Voronoi" width="600" height="333">')
 
     
     #delete all minus values
@@ -132,6 +133,7 @@ for feature in features:
     growing_seed_Threshold_arr = SimpleThresholdSegmentation.connectedSeedGrowing(maskedImage_8bit)
     if numpy.amax(growing_seed_Threshold_arr) == 0:
         writeHTML('<p><span style="color: #ff0000;">No Broccoli was found inside this Voronoi Polygon. Please verify!</span></p>')
+        count+=1
         continue
 
     # mask Array
@@ -155,26 +157,27 @@ for feature in features:
 
     writeHTML('<h4>Plot of the Segmentation threshold</h4>')
 
-    pyplot.figure()
-    pyplot.subplot(1,3,1)
-    pyplot.imshow(croppedMaskedImageNDVI_array)
-    pyplot.title('NDVI image')
+    if createReport==True:
+        pyplot.figure()
+        pyplot.subplot(1,3,1)
+        pyplot.imshow(croppedMaskedImageNDVI_array)
+        pyplot.title('NDVI image')
 
-    pyplot.subplot(1,3,2)
-    pyplot.imshow(croppedMaskedImageNDRE_array)
-    pyplot.title('NDRE image')
+        pyplot.subplot(1,3,2)
+        pyplot.imshow(croppedMaskedImageNDRE_array)
+        pyplot.title('NDRE image')
 
-    pyplot.subplot(1,3,3)
-    pyplot.imshow(growing_seed_Threshold_arr)
-    pyplot.title('Image Threshold')
+        pyplot.subplot(1,3,3)
+        pyplot.imshow(growing_seed_Threshold_arr)
+        pyplot.title('Image Threshold')
 
-    saveImage((loop_img_dir+r'\ndvi_ndre_thresholded_{}.png'.format(id)))
-    pyplot.close()
-    writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_thresholded_{}.png'.format(id)+'" alt="Threshold" width="600" height="333">')
+        saveImage((loop_img_dir+r'\ndvi_ndre_thresholded_{}.png'.format(id)))
+        pyplot.close()
+        writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_thresholded_{}.png'.format(id)+'" alt="Threshold" width="600" height="333">')
 
 
     if colum_mask > columnNDRE:
-        empty_row = numpy.zeros(shape=(rowNDRE,1))
+        empty_row = numpy.zeros(shape=(rowNDRE,colum_mask-columnNDRE))
         empty_row[empty_row==0]=numpy.nan
         croppedMaskedImageNDRE_array = numpy.append(croppedMaskedImageNDRE_array,empty_row, axis=1)
 
@@ -201,27 +204,27 @@ for feature in features:
     #plot the figures
 
     writeHTML('<h4>Comparision of thresholded cut out with original image</h4>')
+    if createReport==True:
+        pyplot.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
+        pyplot.subplot(1,4,1)
+        pyplot.imshow(croppedMaskedImageNDVI[0][0])
+        pyplot.title('NDVI image')
 
-    pyplot.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
-    pyplot.subplot(1,4,1)
-    pyplot.imshow(croppedMaskedImageNDVI[0][0])
-    pyplot.title('NDVI image')
+        pyplot.subplot(1,4,2)
+        pyplot.imshow(maskedArray_ndvi)
+        pyplot.title('Masked Image NDVI')
 
-    pyplot.subplot(1,4,2)
-    pyplot.imshow(maskedArray_ndvi)
-    pyplot.title('Masked Image NDVI')
+        pyplot.subplot(1,4,3)
+        pyplot.imshow(croppedMaskedImageNDRE[0][0])
+        pyplot.title('NDRE image')
 
-    pyplot.subplot(1,4,3)
-    pyplot.imshow(croppedMaskedImageNDRE[0][0])
-    pyplot.title('NDRE image')
+        pyplot.subplot(1,4,4)
+        pyplot.imshow(maskedArray_ndre)
+        pyplot.title('Masked Image NDRE')
 
-    pyplot.subplot(1,4,4)
-    pyplot.imshow(maskedArray_ndre)
-    pyplot.title('Masked Image NDRE')
-
-    saveImage((loop_img_dir+r'\ndvi_ndre_cutout_comparision_{}.png'.format(id)))
-    pyplot.close()
-    writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_cutout_comparision_{}.png'.format(id)+'" alt="Threshold" width="700" height="333">')
+        saveImage((loop_img_dir+r'\ndvi_ndre_cutout_comparision_{}.png'.format(id)))
+        pyplot.close()
+        writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_cutout_comparision_{}.png'.format(id)+'" alt="Threshold" width="700" height="333">')
 
     # mask the not masked values
     maskedArray_ndvi=numpy.extract(~numpy.isnan(maskedArray_ndvi),maskedArray_ndvi)
