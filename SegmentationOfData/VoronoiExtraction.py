@@ -20,41 +20,58 @@ import pandas as pd
 import SimpleITK as sitk
 from IPython.display import display, Markdown
 
+def writeHTML(text):
+    if createReport==True:
+        htmlFile.writelines(text)
 
-#%%
+def saveImage(text):
+    if createReport==True:
+        pyplot.savefig(text, bbox_inches='tight')
+
+# get directory
+dirname = os.path.dirname(__file__)
+
 #Extract polygons from Voronoi Cells and convert into geojson
-shape = shapefile.Reader("C:/DataAnalysis/SegmentationOfData/Voronoi/Voronoi.shp")
+shape = shapefile.Reader(os.path.join(dirname, r'Voronoi/Voronoi.shp'))
 #first feature of the shapefile
 features = shape.shapeRecords()
 
+#Extract Centroids from Voronoi Cells and convert into geojson
+shape = shapefile.Reader(os.path.join(dirname, r'Voronoi/VoronoiCentroids.shp'))
+#first feature of the shapefile
+centroids_features = shape.shapeRecords()
+
+
 #open images
-ndvi_src_string = r'C:\DataAnalysis\SegmentationOfData\export\20190501RMC_index_ndvi_modified.tif'
-ndre_src_string = r'C:\DataAnalysis\SegmentationOfData\export\20190501RMC_index_ndre_modified.tif'
-output_src_string = r'C:\DataAnalysis\SegmentationOfData\export'
-image_dir = r'C:\DataAnalysis\SegmentationOfData\export\images'
+ndvi_src_string = os.path.join(dirname, r'export\20190501RMC_index_ndvi_modified.tif')
+ndre_src_string = os.path.join(dirname, r'export\20190501RMC_index_ndre_modified.tif')
+output_src_string = os.path.join(dirname, r'export')
+image_dir = os.path.join(output_src_string, r'images')
 timestamp = '2019-05-01'
+createReport=False
 
 
 ndvi_src = rasterio.open(ndvi_src_string)
 ndre_src = rasterio.open(ndre_src_string)
 
-if os.path.exists(image_dir) == False:
+if os.path.exists(image_dir) == False and createReport == True:
     os.mkdir(image_dir)
-htmlFile = open(r"C:\DataAnalysis\SegmentationOfData\export\report.html","w")
-htmlFile.writelines('<h1><strong>Segmentation and extraction of drone data</strong></h1>')
-htmlFile.writelines('<h2><strong>Information:</strong></h2>\
+if createReport==True:
+    htmlFile = open(os.path.join(output_src_string, r'report.html'),"w")
+writeHTML('<h1><strong>Segmentation and extraction of drone data</strong></h1>')
+writeHTML('<h2><strong>Information:</strong></h2>\
     <p>NDVI file: {}</p>\
     <p>NDRE file: {}</p>\
     <p>Date of measurement: {} </p>'.format(ndvi_src_string, ndre_src_string, timestamp))
-htmlFile.writelines('The following report shows the segmentation on all the broccolis with the help of the Voronoi \
+writeHTML('The following report shows the segmentation on all the broccolis with the help of the Voronoi \
     algorithm to encapsulate the broccoli and the growing seed algorithm to create a segmentation of the algorithm')
 
-htmlFile.writelines('<h2>Broccoli analysis</h2>')
+writeHTML('<h2>Broccoli analysis</h2>')
 
 export_dataframe = pd.DataFrame()
 count = 0
 for feature in features:
-    
+    centroid_feature = centroids_features[count]
     print("Brokkoli Nr. {}".format(count+1))
     # geo interface of the shape
     featureGeoInterface = feature.shape.__geo_interface__  
@@ -69,24 +86,23 @@ for feature in features:
 
     # meta information
     id = feature.record.id
-    latitude = feature.record.latitude
-    longitude = feature.record.longitude
+    latitude = centroid_feature.record.latitude_
+    longitude = centroid_feature.record.longitude_
 
-    htmlFile.writelines('<h3>Broccoli #{}</h3>'.format(id))
+    writeHTML('<h3>Broccoli #{}</h3>'.format(id))
 
-    htmlFile.writelines('<ul>\
+    writeHTML('<ul>\
             <li>id: {}</li>\
             <li>latitude: {}</li>\
             <li>longitude: {}</li>\
             </ul>'.format(id, latitude, longitude))
     
-    htmlFile.writelines('<h4>Plot of NDVI and NDRE inside corresponding Voronoi Polygon</h4>')
+    writeHTML('<h4>Plot of NDVI and NDRE inside corresponding Voronoi Polygon</h4>')
 
     #create subfolder for images
     loop_img_dir = image_dir+'\{}'.format(id)
-    script_dir = os.path.dirname(__file__)
-    relative_img_dir = script_dir+r'\export\images\{}'.format(id)
-    if os.path.exists(loop_img_dir) == False:
+    relative_img_dir = r'images\{}'.format(id)
+    if os.path.exists(loop_img_dir) == False and createReport == True:
         os.mkdir(loop_img_dir)
 
     #plot the figures
@@ -99,9 +115,9 @@ for feature in features:
     pyplot.imshow(croppedMaskedImageNDRE[0][0])
     pyplot.title('NDRE image')
 
-    pyplot.savefig(relative_img_dir+r'\ndvi_ndre_voronoi_{}.png'.format(id),  bbox_inches='tight')
+    saveImage((loop_img_dir+r'\ndvi_ndre_voronoi_{}.png'.format(id)))
     pyplot.close()
-    htmlFile.writelines('<img src="'+relative_img_dir+r'\ndvi_ndre_voronoi_{}.png'.format(id)+'" alt="Voronoi" width="600" height="333">')
+    writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_voronoi_{}.png'.format(id)+'" alt="Voronoi" width="600" height="333">')
 
     
     #delete all minus values
@@ -115,7 +131,7 @@ for feature in features:
     # Test Segmentation with grwoing seed
     growing_seed_Threshold_arr = SimpleThresholdSegmentation.connectedSeedGrowing(maskedImage_8bit)
     if numpy.amax(growing_seed_Threshold_arr) == 0:
-        htmlFile.writelines('<p><span style="color: #ff0000;">No Broccoli was found inside this Voronoi Polygon. Please verify!</span></p>')
+        writeHTML('<p><span style="color: #ff0000;">No Broccoli was found inside this Voronoi Polygon. Please verify!</span></p>')
         continue
 
     # mask Array
@@ -137,7 +153,7 @@ for feature in features:
 
     #plot Threshold
 
-    htmlFile.writelines('<h4>Plot of the Segmentation threshold</h4>')
+    writeHTML('<h4>Plot of the Segmentation threshold</h4>')
 
     pyplot.figure()
     pyplot.subplot(1,3,1)
@@ -152,9 +168,9 @@ for feature in features:
     pyplot.imshow(growing_seed_Threshold_arr)
     pyplot.title('Image Threshold')
 
-    pyplot.savefig(relative_img_dir+r'\ndvi_ndre_thresholded_{}.png'.format(id),  bbox_inches='tight')
+    saveImage((loop_img_dir+r'\ndvi_ndre_thresholded_{}.png'.format(id)))
     pyplot.close()
-    htmlFile.writelines('<img src="'+relative_img_dir+r'\ndvi_ndre_thresholded_{}.png'.format(id)+'" alt="Threshold" width="600" height="333">')
+    writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_thresholded_{}.png'.format(id)+'" alt="Threshold" width="600" height="333">')
 
 
     if colum_mask > columnNDRE:
@@ -184,7 +200,7 @@ for feature in features:
 
     #plot the figures
 
-    htmlFile.writelines('<h4>Comparision of thresholded cut out with original image</h4>')
+    writeHTML('<h4>Comparision of thresholded cut out with original image</h4>')
 
     pyplot.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
     pyplot.subplot(1,4,1)
@@ -203,16 +219,16 @@ for feature in features:
     pyplot.imshow(maskedArray_ndre)
     pyplot.title('Masked Image NDRE')
 
-    pyplot.savefig(relative_img_dir+r'\ndvi_ndre_cutout_comparision_{}.png'.format(id),  bbox_inches='tight')
+    saveImage((loop_img_dir+r'\ndvi_ndre_cutout_comparision_{}.png'.format(id)))
     pyplot.close()
-    htmlFile.writelines('<img src="'+relative_img_dir+r'\ndvi_ndre_cutout_comparision_{}.png'.format(id)+'" alt="Threshold" width="700" height="333">')
+    writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_cutout_comparision_{}.png'.format(id)+'" alt="Threshold" width="700" height="333">')
 
     # mask the not masked values
     maskedArray_ndvi=numpy.extract(~numpy.isnan(maskedArray_ndvi),maskedArray_ndvi)
     maskedArray_ndre=numpy.extract(~numpy.isnan(maskedArray_ndre),maskedArray_ndre)
 
     # Get all interesting values
-    htmlFile.writelines('<h4>Extracted Values of Broccoli #{}:</h4>'.format(id))
+    writeHTML('<h4>Extracted Values of Broccoli #{}:</h4>'.format(id))
 
     pixelCount = maskedArray_ndvi.count()
     print("pixel count: {}".format(pixelCount))
@@ -233,7 +249,7 @@ for feature in features:
     medianNDREValue = numpy.median(maskedArray_ndre)
     print("medianNDREValue: {}".format(medianNDREValue))
 
-    htmlFile.writelines('<ul>\
+    writeHTML('<ul>\
             <li>Pixel count: {}</li>\
             <li>min NDVI value: {}</li>\
             <li>max NDVI value: {}</li>\
@@ -260,4 +276,5 @@ for feature in features:
 
     export_dataframe.to_csv(output_src_string+'/export.csv', sep=';', index = False)
 
-htmlFile.close()
+if createReport==True:
+    htmlFile.close()
