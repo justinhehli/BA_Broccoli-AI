@@ -42,242 +42,267 @@ shape = shapefile.Reader(os.path.join(dirname, r'Voronoi/VoronoiCentroids.shp'))
 centroids_features = shape.shapeRecords()
 
 
+# configurable parameters
+#_____________________________________________________________________________________________________________________________________________
+
+#use csv??
+useCSV = True
+# create Report??
+createReport = True
+
 #open images
-ndvi_src_string = os.path.join(dirname, r'export\20190425MSC_index_ndvi_transformed.tif')
-ndre_src_string = os.path.join(dirname, r'export\20190425MSC_index_ndre_transformed.tif')
-output_src_string = os.path.join(dirname, r'export')
-image_dir = os.path.join(output_src_string, r'images')
-timestamp = '2019-05-01'
-createReport=False
+#The only things that needs to be changed are the following 3 values. Dont forget to update the time!
+if(useCSV == False):
+    ndvi_src_string = r'\\fs004\ice\lehre\bachelorarbeiten\2019\Pflanzen\Drohnenaufnahmen\20190418\export\20190418RMC_ndvi_transformed.tif'
+    ndre_src_string = r'\\fs004\ice\lehre\bachelorarbeiten\2019\Pflanzen\Drohnenaufnahmen\20190418\export\20190418RMC_ndre_transformed.tif'
+    timestamp = '2019-04-18'
+    data = pd.DataFrame({'ndviString':[ndvi_src_string], 'ndreString':[ndre_src_string], 'timestamp':[timestamp]})
+else:
+    data = pd.read_csv(r'C:\Bachelorthesis\DataAnalysis\SegmentationOfData\report.csv') 
 
+#________________________________________________________________________________________________________________________________________________
 
-ndvi_src = rasterio.open(ndvi_src_string)
-ndre_src = rasterio.open(ndre_src_string)
-
-if os.path.exists(image_dir) == False and createReport == True:
-    os.mkdir(image_dir)
-if createReport==True:
-    htmlFile = open(os.path.join(output_src_string, r'report.html'),"w")
-writeHTML('<h1><strong>Segmentation and extraction of drone data</strong></h1>')
-writeHTML('<h2><strong>Information:</strong></h2>\
-    <p>NDVI file: {}</p>\
-    <p>NDRE file: {}</p>\
-    <p>Date of measurement: {} </p>'.format(ndvi_src_string, ndre_src_string, timestamp))
-writeHTML('The following report shows the segmentation on all the broccolis with the help of the Voronoi \
-    algorithm to encapsulate the broccoli and the growing seed algorithm to create a segmentation of the algorithm')
-
-writeHTML('<h2>Broccoli analysis</h2>')
-
-export_dataframe = pd.DataFrame()
-count = 0
-for feature in features:
-    centroid_feature = centroids_features[count]
-    print("Brokkoli Nr. {}".format(count+1))
-    # geo interface of the shape
-    featureGeoInterface = feature.shape.__geo_interface__  
-    geoJsonString = geojson.dumps(featureGeoInterface, sort_keys=True)
-    geoJsonObject = geojson.loads(geoJsonString)
-
-    # mask and crop image
-    croppedMaskedImageNDVI = rasterio.mask.mask(ndvi_src, [geoJsonObject], crop=True, nodata=-1000.)
-    croppedMaskedImageNDVI[0][0][croppedMaskedImageNDVI[0][0] == -1000] = numpy.nan
-    croppedMaskedImageNDRE = rasterio.mask.mask(ndre_src, [geoJsonObject], crop=True, nodata=-1000.)
-    croppedMaskedImageNDRE[0][0][croppedMaskedImageNDRE[0][0] == -1000] = numpy.nan
-
-    # meta information
-    id = feature.record.id
-    latitude = centroid_feature.record.latitude_
-    longitude = centroid_feature.record.longitude_
-
-    writeHTML('<h3>Broccoli #{}</h3>'.format(id))
-
-    writeHTML('<ul>\
-            <li>id: {}</li>\
-            <li>latitude: {}</li>\
-            <li>longitude: {}</li>\
-            </ul>'.format(id, latitude, longitude))
+for index, row in data.iterrows():
     
-    writeHTML('<h4>Plot of NDVI and NDRE inside corresponding Voronoi Polygon</h4>')
+    ndvi_src_string = row['ndviString']
+    ndre_src_string = row['ndreString']
+    timestamp = row['timestamp']
 
+    cut_string_index = ndvi_src_string.index('export')
+    output_root_dir = ndvi_src_string[0:cut_string_index]
+    output_src_string = output_root_dir+'report'
+    image_dir = output_src_string+'\images'
+    
+
+
+    ndvi_src = rasterio.open(ndvi_src_string)
+    ndre_src = rasterio.open(ndre_src_string)
+
+    if os.path.exists(image_dir) == False and createReport == True:
+        os.mkdir(output_src_string)
+        os.mkdir(image_dir)
     if createReport==True:
-        #create subfolder for images
-        loop_img_dir = image_dir+'\{}'.format(id)
-        relative_img_dir = r'images\{}'.format(id)
-        if os.path.exists(loop_img_dir) == False and createReport == True:
-            os.mkdir(loop_img_dir)
+        htmlFile = open(os.path.join(output_src_string, r'report.html'),"w")
+    writeHTML('<h1><strong>Segmentation and extraction of drone data</strong></h1>')
+    writeHTML('<h2><strong>Information:</strong></h2>\
+        <p>NDVI file: {}</p>\
+        <p>NDRE file: {}</p>\
+        <p>Date of measurement: {} </p>'.format(ndvi_src_string, ndre_src_string, timestamp))
+    writeHTML('The following report shows the segmentation on all the broccolis with the help of the Voronoi \
+        algorithm to encapsulate the broccoli and the growing seed algorithm to create a segmentation of the algorithm')
+
+    writeHTML('<h2>Broccoli analysis</h2>')
+
+    export_dataframe = pd.DataFrame()
+    count = 0
+    for feature in features:
+        centroid_feature = centroids_features[count]
+        print("Brokkoli Nr. {}".format(count+1))
+        # geo interface of the shape
+        featureGeoInterface = feature.shape.__geo_interface__  
+        geoJsonString = geojson.dumps(featureGeoInterface, sort_keys=True)
+        geoJsonObject = geojson.loads(geoJsonString)
+
+        # mask and crop image
+        croppedMaskedImageNDVI = rasterio.mask.mask(ndvi_src, [geoJsonObject], crop=True, nodata=-1000.)
+        croppedMaskedImageNDVI[0][0][croppedMaskedImageNDVI[0][0] == -1000] = numpy.nan
+        croppedMaskedImageNDRE = rasterio.mask.mask(ndre_src, [geoJsonObject], crop=True, nodata=-1000.)
+        croppedMaskedImageNDRE[0][0][croppedMaskedImageNDRE[0][0] == -1000] = numpy.nan
+
+        # meta information
+        id = feature.record.id
+        latitude = centroid_feature.record.latitude_
+        longitude = centroid_feature.record.longitude_
+
+        writeHTML('<h3>Broccoli #{}</h3>'.format(id))
+
+        writeHTML('<ul>\
+                <li>id: {}</li>\
+                <li>latitude: {}</li>\
+                <li>longitude: {}</li>\
+                </ul>'.format(id, latitude, longitude))
+        
+        writeHTML('<h4>Plot of NDVI and NDRE inside corresponding Voronoi Polygon</h4>')
+
+        if createReport==True:
+            #create subfolder for images
+            loop_img_dir = image_dir+'\{}'.format(id)
+            relative_img_dir = r'images\{}'.format(id)
+            if os.path.exists(loop_img_dir) == False and createReport == True:
+                os.mkdir(loop_img_dir)
+
+            #plot the figures
+            fig = pyplot.figure()
+            pyplot.subplot(1,2,1)
+            pyplot.imshow(croppedMaskedImageNDVI[0][0])
+            pyplot.title('NDVI image')
+
+            pyplot.subplot(1,2,2)
+            pyplot.imshow(croppedMaskedImageNDRE[0][0])
+            pyplot.title('NDRE image')
+
+            saveImage((loop_img_dir+r'\ndvi_ndre_voronoi_{}.png'.format(id)))
+            pyplot.close()
+            writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_voronoi_{}.png'.format(id)+'" alt="Voronoi" width="600" height="333">')
+
+        
+        #delete all minus values
+        croppedMaskedImageNDVI[0][0][croppedMaskedImageNDVI[0][0]<0]=numpy.nan
+
+        # create 8 bit array for segmentation
+        maskedImage_8bit = croppedMaskedImageNDVI[0][0]
+        maskedImage_8bit = maskedImage_8bit * 255
+        maskedImage_8bit = maskedImage_8bit.astype('uint8')
+
+        # Test Segmentation with grwoing seed
+        growing_seed_Threshold_arr = SimpleThresholdSegmentation.connectedSeedGrowing(maskedImage_8bit)
+        if numpy.amax(growing_seed_Threshold_arr) == 0:
+            writeHTML('<p><span style="color: #ff0000;">No Broccoli was found inside this Voronoi Polygon. Please verify!</span></p>')
+            count+=1
+            continue
+
+        # mask Array
+        maskedArray = growing_seed_Threshold_arr
+        maskedArray[maskedArray==1]=2
+        maskedArray[maskedArray==0]=1
+        maskedArray[maskedArray==2]=0
+        croppedMaskedImageNDVI_array= numpy.array(croppedMaskedImageNDVI[0][0])
+        croppedMaskedImageNDRE_array= numpy.array(croppedMaskedImageNDRE[0][0])
+
+        shape_maskedarray = maskedArray.shape
+        shapeNDRE = croppedMaskedImageNDRE_array.shape
+
+        row_mask = shape_maskedarray[0]
+        colum_mask = shape_maskedarray[1]
+
+        rowNDRE = shapeNDRE[0]
+        columnNDRE = shapeNDRE[1]
+
+        #plot Threshold
+
+        writeHTML('<h4>Plot of the Segmentation threshold</h4>')
+
+        if createReport==True:
+            pyplot.figure()
+            pyplot.subplot(1,3,1)
+            pyplot.imshow(croppedMaskedImageNDVI_array)
+            pyplot.title('NDVI image')
+
+            pyplot.subplot(1,3,2)
+            pyplot.imshow(croppedMaskedImageNDRE_array)
+            pyplot.title('NDRE image')
+
+            pyplot.subplot(1,3,3)
+            pyplot.imshow(growing_seed_Threshold_arr)
+            pyplot.title('Image Threshold')
+
+            saveImage((loop_img_dir+r'\ndvi_ndre_thresholded_{}.png'.format(id)))
+            pyplot.close()
+            writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_thresholded_{}.png'.format(id)+'" alt="Threshold" width="600" height="333">')
+
+
+        if colum_mask > columnNDRE:
+            empty_row = numpy.zeros(shape=(rowNDRE,colum_mask-columnNDRE))
+            empty_row[empty_row==0]=numpy.nan
+            croppedMaskedImageNDRE_array = numpy.append(croppedMaskedImageNDRE_array,empty_row, axis=1)
+
+        if columnNDRE > colum_mask:
+            while columnNDRE > colum_mask:
+                croppedMaskedImageNDRE_array = numpy.delete(croppedMaskedImageNDRE_array, columnNDRE-1, axis=1)
+                columnNDRE -= 1
+
+        if row_mask > rowNDRE:
+            empty_column = numpy.zeros(shape=(1,colum_mask))
+            empty_column[empty_column==0]=numpy.nan
+            croppedMaskedImageNDRE_array = numpy.append(croppedMaskedImageNDRE_array,empty_column, axis=0)
+
+        if rowNDRE > row_mask:
+            while rowNDRE > row_mask:
+                croppedMaskedImageNDRE_array = numpy.delete(croppedMaskedImageNDRE_array, rowNDRE-1, axis=0)
+                rowNDRE -= 1
+
+
+        maskedArray_ndvi= ma.array(croppedMaskedImageNDVI_array, mask=maskedArray, copy=True)
+        maskedArray_ndre= ma.array(croppedMaskedImageNDRE_array, mask=maskedArray, copy=True)
+
 
         #plot the figures
-        fig = pyplot.figure()
-        pyplot.subplot(1,2,1)
-        pyplot.imshow(croppedMaskedImageNDVI[0][0])
-        pyplot.title('NDVI image')
 
-        pyplot.subplot(1,2,2)
-        pyplot.imshow(croppedMaskedImageNDRE[0][0])
-        pyplot.title('NDRE image')
+        writeHTML('<h4>Comparision of thresholded cut out with original image</h4>')
+        if createReport==True:
+            pyplot.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
+            pyplot.subplot(1,4,1)
+            pyplot.imshow(croppedMaskedImageNDVI[0][0])
+            pyplot.title('NDVI image')
 
-        saveImage((loop_img_dir+r'\ndvi_ndre_voronoi_{}.png'.format(id)))
-        pyplot.close()
-        writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_voronoi_{}.png'.format(id)+'" alt="Voronoi" width="600" height="333">')
+            pyplot.subplot(1,4,2)
+            pyplot.imshow(maskedArray_ndvi)
+            pyplot.title('Masked Image NDVI')
 
-    
-    #delete all minus values
-    croppedMaskedImageNDVI[0][0][croppedMaskedImageNDVI[0][0]<0]=numpy.nan
+            pyplot.subplot(1,4,3)
+            pyplot.imshow(croppedMaskedImageNDRE[0][0])
+            pyplot.title('NDRE image')
 
-    # create 8 bit array for segmentation
-    maskedImage_8bit = croppedMaskedImageNDVI[0][0]
-    maskedImage_8bit = maskedImage_8bit * 255
-    maskedImage_8bit = maskedImage_8bit.astype('uint8')
+            pyplot.subplot(1,4,4)
+            pyplot.imshow(maskedArray_ndre)
+            pyplot.title('Masked Image NDRE')
 
-    # Test Segmentation with grwoing seed
-    growing_seed_Threshold_arr = SimpleThresholdSegmentation.connectedSeedGrowing(maskedImage_8bit)
-    if numpy.amax(growing_seed_Threshold_arr) == 0:
-        writeHTML('<p><span style="color: #ff0000;">No Broccoli was found inside this Voronoi Polygon. Please verify!</span></p>')
-        count+=1
-        continue
+            saveImage((loop_img_dir+r'\ndvi_ndre_cutout_comparision_{}.png'.format(id)))
+            pyplot.close()
+            writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_cutout_comparision_{}.png'.format(id)+'" alt="Threshold" width="700" height="333">')
 
-    # mask Array
-    maskedArray = growing_seed_Threshold_arr
-    maskedArray[maskedArray==1]=2
-    maskedArray[maskedArray==0]=1
-    maskedArray[maskedArray==2]=0
-    croppedMaskedImageNDVI_array= numpy.array(croppedMaskedImageNDVI[0][0])
-    croppedMaskedImageNDRE_array= numpy.array(croppedMaskedImageNDRE[0][0])
+        # mask the not masked values
+        maskedArray_ndvi=numpy.extract(~numpy.isnan(maskedArray_ndvi),maskedArray_ndvi)
+        maskedArray_ndre=numpy.extract(~numpy.isnan(maskedArray_ndre),maskedArray_ndre)
 
-    shape_maskedarray = maskedArray.shape
-    shapeNDRE = croppedMaskedImageNDRE_array.shape
+        # Get all interesting values
+        writeHTML('<h4>Extracted Values of Broccoli #{}:</h4>'.format(id))
 
-    row_mask = shape_maskedarray[0]
-    colum_mask = shape_maskedarray[1]
+        pixelCount = maskedArray_ndvi.count()
+        print("pixel count: {}".format(pixelCount))
+        minNDVIValue = numpy.amin(maskedArray_ndvi)
+        print("minNDVIValue: {}".format(minNDVIValue))
+        maxNDVIValue = numpy.amax(maskedArray_ndvi)
+        print("maxNDVIValue: {}".format(maxNDVIValue))
+        meanNDVIValue = numpy.mean(maskedArray_ndvi)
+        print("meanNDVIValue: {}".format(meanNDVIValue))
+        medianNDVIValue = numpy.median(maskedArray_ndvi)
+        print("medianNDVIValue: {}".format(medianNDVIValue))
+        minNDREValue = numpy.amin(maskedArray_ndre)
+        print("minNDREValue: {}".format(minNDREValue))
+        maxNDREValue = numpy.amax(maskedArray_ndre)
+        print("maxNDREValue: {}".format(maxNDREValue))
+        meanNDREValue = numpy.mean(maskedArray_ndre)
+        print("meanNDREValue: {}".format(meanNDREValue))
+        medianNDREValue = numpy.median(maskedArray_ndre)
+        print("medianNDREValue: {}".format(medianNDREValue))
 
-    rowNDRE = shapeNDRE[0]
-    columnNDRE = shapeNDRE[1]
+        writeHTML('<ul>\
+                <li>Pixel count: {}</li>\
+                <li>min NDVI value: {}</li>\
+                <li>max NDVI value: {}</li>\
+                <li>mean NDVI value: {}</li>\
+                <li>median NDVI value: {}</li>\
+                <li>min NDRE value: {}</li>\
+                <li>max NDRE value: {}</li>\
+                <li>mean NDRE value: {}</li>\
+                <li>median NDRE value: {}</li>\
+                </ul>'.format(pixelCount,minNDVIValue,maxNDVIValue,meanNDVIValue,medianNDVIValue,minNDREValue,maxNDREValue,meanNDREValue,medianNDREValue))
 
-    #plot Threshold
 
-    writeHTML('<h4>Plot of the Segmentation threshold</h4>')
+
+        dataframe = pd.DataFrame({'id':[id], 'lat':[latitude], 'long':[longitude], 'timestamp': timestamp, \
+                        'pixelCount': [pixelCount], 'maxNDVI': [maxNDVIValue], 'minNDVI': [minNDVIValue],\
+                            'meanNDVI':[meanNDVIValue], 'medianNDVI': [medianNDVIValue], 'maxNDRE': [maxNDREValue],\
+                                'minNDRE':[minNDREValue], 'meanNDRE': [meanNDREValue], 'medianNDRE': [medianNDREValue]})
+
+        if count == 0:
+            export_dataframe = dataframe
+        else:
+            export_dataframe = export_dataframe.append(dataframe, ignore_index=True)
+        count += 1
+
+        export_dataframe.to_csv(output_src_string+'\export.csv', sep=';', index = False)
 
     if createReport==True:
-        pyplot.figure()
-        pyplot.subplot(1,3,1)
-        pyplot.imshow(croppedMaskedImageNDVI_array)
-        pyplot.title('NDVI image')
-
-        pyplot.subplot(1,3,2)
-        pyplot.imshow(croppedMaskedImageNDRE_array)
-        pyplot.title('NDRE image')
-
-        pyplot.subplot(1,3,3)
-        pyplot.imshow(growing_seed_Threshold_arr)
-        pyplot.title('Image Threshold')
-
-        saveImage((loop_img_dir+r'\ndvi_ndre_thresholded_{}.png'.format(id)))
-        pyplot.close()
-        writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_thresholded_{}.png'.format(id)+'" alt="Threshold" width="600" height="333">')
-
-
-    if colum_mask > columnNDRE:
-        empty_row = numpy.zeros(shape=(rowNDRE,colum_mask-columnNDRE))
-        empty_row[empty_row==0]=numpy.nan
-        croppedMaskedImageNDRE_array = numpy.append(croppedMaskedImageNDRE_array,empty_row, axis=1)
-
-    if columnNDRE > colum_mask:
-        while columnNDRE > colum_mask:
-            croppedMaskedImageNDRE_array = numpy.delete(croppedMaskedImageNDRE_array, columnNDRE-1, axis=1)
-            columnNDRE -= 1
-
-    if row_mask > rowNDRE:
-        empty_column = numpy.zeros(shape=(1,colum_mask))
-        empty_column[empty_column==0]=numpy.nan
-        croppedMaskedImageNDRE_array = numpy.append(croppedMaskedImageNDRE_array,empty_column, axis=0)
-
-    if rowNDRE > row_mask:
-        while rowNDRE > row_mask:
-            croppedMaskedImageNDRE_array = numpy.delete(croppedMaskedImageNDRE_array, rowNDRE-1, axis=0)
-            rowNDRE -= 1
-
-
-    maskedArray_ndvi= ma.array(croppedMaskedImageNDVI_array, mask=maskedArray, copy=True)
-    maskedArray_ndre= ma.array(croppedMaskedImageNDRE_array, mask=maskedArray, copy=True)
-
-
-    #plot the figures
-
-    writeHTML('<h4>Comparision of thresholded cut out with original image</h4>')
-    if createReport==True:
-        pyplot.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
-        pyplot.subplot(1,4,1)
-        pyplot.imshow(croppedMaskedImageNDVI[0][0])
-        pyplot.title('NDVI image')
-
-        pyplot.subplot(1,4,2)
-        pyplot.imshow(maskedArray_ndvi)
-        pyplot.title('Masked Image NDVI')
-
-        pyplot.subplot(1,4,3)
-        pyplot.imshow(croppedMaskedImageNDRE[0][0])
-        pyplot.title('NDRE image')
-
-        pyplot.subplot(1,4,4)
-        pyplot.imshow(maskedArray_ndre)
-        pyplot.title('Masked Image NDRE')
-
-        saveImage((loop_img_dir+r'\ndvi_ndre_cutout_comparision_{}.png'.format(id)))
-        pyplot.close()
-        writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_cutout_comparision_{}.png'.format(id)+'" alt="Threshold" width="700" height="333">')
-
-    # mask the not masked values
-    maskedArray_ndvi=numpy.extract(~numpy.isnan(maskedArray_ndvi),maskedArray_ndvi)
-    maskedArray_ndre=numpy.extract(~numpy.isnan(maskedArray_ndre),maskedArray_ndre)
-
-    # Get all interesting values
-    writeHTML('<h4>Extracted Values of Broccoli #{}:</h4>'.format(id))
-
-    pixelCount = maskedArray_ndvi.count()
-    print("pixel count: {}".format(pixelCount))
-    minNDVIValue = numpy.amin(maskedArray_ndvi)
-    print("minNDVIValue: {}".format(minNDVIValue))
-    maxNDVIValue = numpy.amax(maskedArray_ndvi)
-    print("maxNDVIValue: {}".format(maxNDVIValue))
-    meanNDVIValue = numpy.mean(maskedArray_ndvi)
-    print("meanNDVIValue: {}".format(meanNDVIValue))
-    medianNDVIValue = numpy.median(maskedArray_ndvi)
-    print("medianNDVIValue: {}".format(medianNDVIValue))
-    minNDREValue = numpy.amin(maskedArray_ndre)
-    print("minNDREValue: {}".format(minNDREValue))
-    maxNDREValue = numpy.amax(maskedArray_ndre)
-    print("maxNDREValue: {}".format(maxNDREValue))
-    meanNDREValue = numpy.mean(maskedArray_ndre)
-    print("meanNDREValue: {}".format(meanNDREValue))
-    medianNDREValue = numpy.median(maskedArray_ndre)
-    print("medianNDREValue: {}".format(medianNDREValue))
-
-    writeHTML('<ul>\
-            <li>Pixel count: {}</li>\
-            <li>min NDVI value: {}</li>\
-            <li>max NDVI value: {}</li>\
-            <li>mean NDVI value: {}</li>\
-            <li>median NDVI value: {}</li>\
-            <li>min NDRE value: {}</li>\
-            <li>max NDRE value: {}</li>\
-            <li>mean NDRE value: {}</li>\
-            <li>median NDRE value: {}</li>\
-            </ul>'.format(pixelCount,minNDVIValue,maxNDVIValue,meanNDVIValue,medianNDVIValue,minNDREValue,maxNDREValue,meanNDREValue,medianNDREValue))
-
-
-
-    dataframe = pd.DataFrame({'id':[id], 'lat':[latitude], 'long':[longitude], 'timestamp': timestamp, \
-                    'pixelCount': [pixelCount], 'maxNDVI': [maxNDVIValue], 'minNDVI': [minNDVIValue],\
-                        'meanNDVI':[meanNDVIValue], 'medianNDVI': [medianNDVIValue], 'maxNDRE': [maxNDREValue],\
-                            'minNDRE':[minNDREValue], 'meanNDRE': [meanNDREValue], 'medianNDRE': [medianNDREValue]})
-
-    if count == 0:
-        export_dataframe = dataframe
-    else:
-        export_dataframe = export_dataframe.append(dataframe, ignore_index=True)
-    count += 1
-
-    export_dataframe.to_csv(output_src_string+'/export.csv', sep=';', index = False)
-
-if createReport==True:
-    htmlFile.close()
+        htmlFile.close()
