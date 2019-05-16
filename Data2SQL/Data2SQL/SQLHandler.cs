@@ -104,18 +104,18 @@ namespace Data2SQL
                             //create update command
                             this.command = new SqlCommand("UPDATE dbo.broccolivalues SET id = @id, timestamp = @timestamp, pixelCount = @pixelCount," +
                                 "maxNDVI = @maxNDVI, minNDVI = @minNDVI, meanNDVI = @meanNDVI, medianNDVI = @medianNDVI, maxNDRE = @maxNDRE," +
-                                "minNDRE = @minNDRE, meanNDRE = @meanNDRE, medianNDRE =@medianNDRE, NDVI_15_Quantile = @NDVI_15_Quantile" +
-                                "NDVI_25_Quantile = @NDVI_25_Quantile, NDVI_75_Quantile = @NDVI_75_Quantile, NDVI_85_Quantile = @NDVI_85_Quantile"+
-                                "NDRE_15_Quantile = @NDRE_15_Quantile, NDRE_25_Quantile = @NDRE_25_Quantile, NDRE_75_Quantile = @NDRE_75_Quantile, NDRE_85_Quantile = @NDRE_85_Quantile"+
+                                "minNDRE = @minNDRE, meanNDRE = @meanNDRE, medianNDRE =@medianNDRE, NDVI_15_Quantile = @NDVI_15_Quantile, " +
+                                "NDVI_25_Quantile = @NDVI_25_Quantile, NDVI_75_Quantile = @NDVI_75_Quantile, NDVI_85_Quantile = @NDVI_85_Quantile,"+
+                                "NDRE_15_Quantile = @NDRE_15_Quantile, NDRE_25_Quantile = @NDRE_25_Quantile, NDRE_75_Quantile = @NDRE_75_Quantile, NDRE_85_Quantile = @NDRE_85_Quantile "+
                                 "WHERE timestamp=@timestamp and id=@id;", conn);
                         }
                         else
                         {
                             // create command to insert values
                             this.command = new SqlCommand("insert into dbo.broccolivalues(id, timestamp, pixelCount, maxNDVI, minNDVI, " +
-                                "meanNDVI, medianNDVI, maxNDRE, minNDRE, meanNDRE, medianNDRE, NDVI_15_Quantile, NDVI_25_Quantile, NDVI_75_Quantile, NDVI_85_Quantile"+
+                                "meanNDVI, medianNDVI, maxNDRE, minNDRE, meanNDRE, medianNDRE, NDVI_15_Quantile, NDVI_25_Quantile, NDVI_75_Quantile, NDVI_85_Quantile,"+
                                 "NDRE_15_Quantile, NDRE_25_Quantile, NDRE_75_Quantile, NDRE_85_Quantile) values (@id, @timestamp, @pixelCount , @maxNDVI," +
-                                "@minNDVI, @meanNDVI, @medianNDVI, @maxNDRE, @minNDRE, @meanNDRE, @medianNDRE, @NDVI_15_Quantile, @NDVI_25_Quantile, @NDVI_75_Quantile, @NDVI_85_Quantile"+
+                                "@minNDVI, @meanNDVI, @medianNDVI, @maxNDRE, @minNDRE, @meanNDRE, @medianNDRE, @NDVI_15_Quantile, @NDVI_25_Quantile, @NDVI_75_Quantile, @NDVI_85_Quantile, "+
                                 "@NDRE_15_Quantile, @NDRE_25_Quantile, @NDRE_75_Quantile, @NDRE_85_Quantile) " +
                                 "select id from dbo.broccoli where id=@id;", conn);
                         }

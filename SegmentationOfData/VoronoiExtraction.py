@@ -20,6 +20,7 @@ import shapefile
 import pandas as pd
 import SimpleITK as sitk
 from IPython.display import display, Markdown
+import subprocess
 
 def writeHTML(text):
     if createReport==True:
@@ -57,11 +58,17 @@ centroids_features = shape.shapeRecords()
 #use csv to load tif files??
 useCSV = False
 # create Report??
-createReport = True
+createReport = False
 # show plots
 showPlot = False
 # create csv export
 createCSVexport = True
+# transfer data to sql (can only be true if csv export is also true)
+Data2SQL = True
+
+if(createCSVexport == False and Data2SQL == True):
+   print("ERROR: Data2SQL can't be true if createCSVexport is false!")
+   sys.exit() 
 
 #open images
 #The only things that needs to be changed are the following 3 values. Dont forget to update the time!
@@ -361,9 +368,9 @@ for index, row in data.iterrows():
                 export_dataframe = dataframe
             else:
                 export_dataframe = export_dataframe.append(dataframe, ignore_index=True)
-            count += 1
-
             export_dataframe.to_csv(output_src_string+'\export.csv', sep=';', index = False)
-
+            count += 1
     if createReport==True:
         htmlFile.close()
+    if Data2SQL == True:
+        subprocess.call([r"Data2SQL\Data2SQL\bin\Debug\Data2SQL.exe", output_src_string+'\export.csv'])
