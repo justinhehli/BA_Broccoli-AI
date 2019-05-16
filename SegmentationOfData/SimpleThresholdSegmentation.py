@@ -43,7 +43,7 @@ def connectedSeedGrowing(arr):
     #myshow(sitk.LabelOverlay(img, seg))
 
     #calculate threshold
-    seg_con = sitk.ConnectedThreshold(img, seedList=[seed],lower=100, upper=255)
+    seg_con = sitk.ConnectedThreshold(img, seedList=[seed],lower=120, upper=255)
 
     #clean up
     vectorRadius = (1, 1)

@@ -104,15 +104,19 @@ namespace Data2SQL
                             //create update command
                             this.command = new SqlCommand("UPDATE dbo.broccolivalues SET id = @id, timestamp = @timestamp, pixelCount = @pixelCount," +
                                 "maxNDVI = @maxNDVI, minNDVI = @minNDVI, meanNDVI = @meanNDVI, medianNDVI = @medianNDVI, maxNDRE = @maxNDRE," +
-                                "minNDRE = @minNDRE, meanNDRE = @meanNDRE, medianNDRE  =@medianNDRE " +
+                                "minNDRE = @minNDRE, meanNDRE = @meanNDRE, medianNDRE =@medianNDRE, NDVI_15_Quantile = @NDVI_15_Quantile, " +
+                                "NDVI_25_Quantile = @NDVI_25_Quantile, NDVI_75_Quantile = @NDVI_75_Quantile, NDVI_85_Quantile = @NDVI_85_Quantile,"+
+                                "NDRE_15_Quantile = @NDRE_15_Quantile, NDRE_25_Quantile = @NDRE_25_Quantile, NDRE_75_Quantile = @NDRE_75_Quantile, NDRE_85_Quantile = @NDRE_85_Quantile "+
                                 "WHERE timestamp=@timestamp and id=@id;", conn);
                         }
                         else
                         {
                             // create command to insert values
                             this.command = new SqlCommand("insert into dbo.broccolivalues(id, timestamp, pixelCount, maxNDVI, minNDVI, " +
-                                "meanNDVI, medianNDVI, maxNDRE, minNDRE, meanNDRE, medianNDRE) values (@id, @timestamp, @pixelCount , @maxNDVI," +
-                                "@minNDVI, @meanNDVI, @medianNDVI, @maxNDRE, @minNDRE, @meanNDRE, @medianNDRE) " +
+                                "meanNDVI, medianNDVI, maxNDRE, minNDRE, meanNDRE, medianNDRE, NDVI_15_Quantile, NDVI_25_Quantile, NDVI_75_Quantile, NDVI_85_Quantile,"+
+                                "NDRE_15_Quantile, NDRE_25_Quantile, NDRE_75_Quantile, NDRE_85_Quantile) values (@id, @timestamp, @pixelCount , @maxNDVI," +
+                                "@minNDVI, @meanNDVI, @medianNDVI, @maxNDRE, @minNDRE, @meanNDRE, @medianNDRE, @NDVI_15_Quantile, @NDVI_25_Quantile, @NDVI_75_Quantile, @NDVI_85_Quantile, "+
+                                "@NDRE_15_Quantile, @NDRE_25_Quantile, @NDRE_75_Quantile, @NDRE_85_Quantile) " +
                                 "select id from dbo.broccoli where id=@id;", conn);
                         }
 
@@ -127,6 +131,14 @@ namespace Data2SQL
                         this.AddWithValue("minNDRE", broccoliValue["minNDRE"]);
                         this.AddWithValue("meanNDRE", broccoliValue["meanNDRE"]);
                         this.AddWithValue("medianNDRE", broccoliValue["medianNDRE"]);
+                        this.AddWithValue("NDVI_15_Quantile", broccoliValue["NDVI_15_Quantile"]);
+                        this.AddWithValue("NDVI_25_Quantile", broccoliValue["NDVI_25_Quantile"]);
+                        this.AddWithValue("NDVI_75_Quantile", broccoliValue["NDVI_75_Quantile"]);
+                        this.AddWithValue("NDVI_85_Quantile", broccoliValue["NDVI_85_Quantile"]);
+                        this.AddWithValue("NDRE_15_Quantile", broccoliValue["NDRE_15_Quantile"]);
+                        this.AddWithValue("NDRE_25_Quantile", broccoliValue["NDRE_25_Quantile"]);
+                        this.AddWithValue("NDRE_75_Quantile", broccoliValue["NDRE_75_Quantile"]);
+                        this.AddWithValue("NDRE_85_Quantile", broccoliValue["NDRE_85_Quantile"]);
                         command.ExecuteNonQuery();
                     }
                 }
