@@ -11,6 +11,7 @@ import rasterio.features
 import rasterio.warp
 import rasterio.drivers
 import rasterio.mask
+import matplotlib
 import matplotlib.pyplot as pyplot
 import numpy
 import numpy.ma as ma
@@ -26,7 +27,15 @@ def writeHTML(text):
 
 def saveImage(text):
     if createReport==True:
+        if os.path.isfile(text):
+            os.remove(text)
         pyplot.savefig(text, bbox_inches='tight')
+
+def saveArray(array, path):
+    if createReport==True:
+        if os.path.isfile(path):
+            os.remove(path)
+        array.dump(path)
 
 # get directory
 dirname = os.path.dirname(__file__)
@@ -45,16 +54,20 @@ centroids_features = shape.shapeRecords()
 # configurable parameters
 #_____________________________________________________________________________________________________________________________________________
 
-#use csv??
-useCSV = True
+#use csv to load tif files??
+useCSV = False
 # create Report??
 createReport = True
+# show plots
+showPlot = False
+# create csv export
+createCSVexport = True
 
 #open images
 #The only things that needs to be changed are the following 3 values. Dont forget to update the time!
 if(useCSV == False):
-    ndvi_src_string = r'\\fs004\ice\lehre\bachelorarbeiten\2019\Pflanzen\Drohnenaufnahmen\20190418\export\20190418RMC_ndvi_transformed.tif'
-    ndre_src_string = r'\\fs004\ice\lehre\bachelorarbeiten\2019\Pflanzen\Drohnenaufnahmen\20190418\export\20190418RMC_ndre_transformed.tif'
+    ndvi_src_string = r'\\fs004\ice\lehre\bachelorarbeiten\2019\Pflanzen\Drohnenaufnahmen\20190509\export\20190509RMC_index_ndvi_modified.tif'
+    ndre_src_string = r'\\fs004\ice\lehre\bachelorarbeiten\2019\Pflanzen\Drohnenaufnahmen\20190509\export\20190509RMC_index_ndre_modified.tif'
     timestamp = '2019-04-18'
     data = pd.DataFrame({'ndviString':[ndvi_src_string], 'ndreString':[ndre_src_string], 'timestamp':[timestamp]})
 else:
@@ -124,24 +137,27 @@ for index, row in data.iterrows():
         
         writeHTML('<h4>Plot of NDVI and NDRE inside corresponding Voronoi Polygon</h4>')
 
-        if createReport==True:
+        if createReport==True or showPlot==True:
             #create subfolder for images
             loop_img_dir = image_dir+'\{}'.format(id)
             relative_img_dir = r'images\{}'.format(id)
-            if os.path.exists(loop_img_dir) == False and createReport == True:
+            if (os.path.exists(loop_img_dir) == False and createReport == True):
                 os.mkdir(loop_img_dir)
-
+            #normalize colors
+            normalize = matplotlib.colors.Normalize(vmin=0, vmax=1)
             #plot the figures
             fig = pyplot.figure()
             pyplot.subplot(1,2,1)
-            pyplot.imshow(croppedMaskedImageNDVI[0][0])
+            pyplot.imshow(croppedMaskedImageNDVI[0][0], norm=normalize)
             pyplot.title('NDVI image')
 
             pyplot.subplot(1,2,2)
-            pyplot.imshow(croppedMaskedImageNDRE[0][0])
+            pyplot.imshow(croppedMaskedImageNDRE[0][0], norm=normalize)
             pyplot.title('NDRE image')
-
-            saveImage((loop_img_dir+r'\ndvi_ndre_voronoi_{}.png'.format(id)))
+            if(showPlot==True):
+                pyplot.show()
+            if(createReport==True):
+                saveImage((loop_img_dir+r'\ndvi_ndre_voronoi_{}.png'.format(id)))
             pyplot.close()
             writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_voronoi_{}.png'.format(id)+'" alt="Voronoi" width="600" height="333">')
 
@@ -182,21 +198,26 @@ for index, row in data.iterrows():
 
         writeHTML('<h4>Plot of the Segmentation threshold</h4>')
 
-        if createReport==True:
+        if createReport==True or showPlot==True:
+            #normalize colors
+            normalize = matplotlib.colors.Normalize(vmin=0, vmax=1)
             pyplot.figure()
             pyplot.subplot(1,3,1)
-            pyplot.imshow(croppedMaskedImageNDVI_array)
+            pyplot.imshow(croppedMaskedImageNDVI_array, norm=normalize)
             pyplot.title('NDVI image')
 
             pyplot.subplot(1,3,2)
-            pyplot.imshow(croppedMaskedImageNDRE_array)
+            pyplot.imshow(croppedMaskedImageNDRE_array, norm=normalize)
             pyplot.title('NDRE image')
 
             pyplot.subplot(1,3,3)
-            pyplot.imshow(growing_seed_Threshold_arr)
+            pyplot.imshow(growing_seed_Threshold_arr, norm=normalize)
             pyplot.title('Image Threshold')
 
-            saveImage((loop_img_dir+r'\ndvi_ndre_thresholded_{}.png'.format(id)))
+            if(showPlot==True):
+                pyplot.show()
+            if(createReport==True):
+                saveImage((loop_img_dir+r'\ndvi_ndre_thresholded_{}.png'.format(id)))
             pyplot.close()
             writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_thresholded_{}.png'.format(id)+'" alt="Threshold" width="600" height="333">')
 
@@ -229,27 +250,37 @@ for index, row in data.iterrows():
         #plot the figures
 
         writeHTML('<h4>Comparision of thresholded cut out with original image</h4>')
-        if createReport==True:
+        if createReport==True or showPlot==True:
+            #normalize colors
+            normalize = matplotlib.colors.Normalize(vmin=0, vmax=1)
             pyplot.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
             pyplot.subplot(1,4,1)
-            pyplot.imshow(croppedMaskedImageNDVI[0][0])
+            pyplot.imshow(croppedMaskedImageNDVI[0][0], norm=normalize)
             pyplot.title('NDVI image')
+            #save numpy array
+            saveArray(croppedMaskedImageNDVI[0][0], loop_img_dir+r'\ndvi_{}.npy'.format(id))
 
             pyplot.subplot(1,4,2)
-            pyplot.imshow(maskedArray_ndvi)
+            pyplot.imshow(maskedArray_ndvi,norm=normalize)
             pyplot.title('Masked Image NDVI')
+            saveArray(maskedArray_ndvi, loop_img_dir+r'\ndvi_masked_{}.npy'.format(id))
 
             pyplot.subplot(1,4,3)
-            pyplot.imshow(croppedMaskedImageNDRE[0][0])
+            pyplot.imshow(croppedMaskedImageNDRE[0][0],norm=normalize)
             pyplot.title('NDRE image')
+            saveArray(croppedMaskedImageNDRE[0][0], loop_img_dir+r'\ndre_{}.npy'.format(id))
 
             pyplot.subplot(1,4,4)
-            pyplot.imshow(maskedArray_ndre)
+            pyplot.imshow(maskedArray_ndre, norm=normalize)
             pyplot.title('Masked Image NDRE')
+            saveArray(maskedArray_ndre, loop_img_dir+r'\ndre_masked_{}.npy'.format(id))
 
-            saveImage((loop_img_dir+r'\ndvi_ndre_cutout_comparision_{}.png'.format(id)))
-            pyplot.close()
+            if(showPlot==True):
+                pyplot.show()
+            if(createReport==True):
+                saveImage((loop_img_dir+r'\ndvi_ndre_cutout_comparision_{}.png'.format(id)))
             writeHTML('<img src="'+relative_img_dir+r'\ndvi_ndre_cutout_comparision_{}.png'.format(id)+'" alt="Threshold" width="700" height="333">')
+            pyplot.close()
 
         # mask the not masked values
         maskedArray_ndvi=numpy.extract(~numpy.isnan(maskedArray_ndvi),maskedArray_ndvi)
@@ -268,6 +299,15 @@ for index, row in data.iterrows():
         print("meanNDVIValue: {}".format(meanNDVIValue))
         medianNDVIValue = numpy.median(maskedArray_ndvi)
         print("medianNDVIValue: {}".format(medianNDVIValue))
+        ndvi_15_quantile = numpy.quantile(maskedArray_ndvi, 0.15)
+        print("NDVI_15_Quantile: {}".format(ndvi_15_quantile))
+        ndvi_25_quantile = numpy.quantile(maskedArray_ndvi, 0.25)
+        print("NDVI_25_Quantile: {}".format(ndvi_25_quantile))
+        ndvi_75_quantile = numpy.quantile(maskedArray_ndvi, 0.75)
+        print("NDVI_75_Quantile: {}".format(ndvi_75_quantile))
+        ndvi_85_quantile = numpy.quantile(maskedArray_ndvi, 0.85)
+        print("NDVI_85_Quantile: {}".format(ndvi_85_quantile))
+        
         minNDREValue = numpy.amin(maskedArray_ndre)
         print("minNDREValue: {}".format(minNDREValue))
         maxNDREValue = numpy.amax(maskedArray_ndre)
@@ -276,6 +316,14 @@ for index, row in data.iterrows():
         print("meanNDREValue: {}".format(meanNDREValue))
         medianNDREValue = numpy.median(maskedArray_ndre)
         print("medianNDREValue: {}".format(medianNDREValue))
+        ndre_15_quantile = numpy.quantile(maskedArray_ndre, 0.15)
+        print("ndre_15_Quantile: {}".format(ndre_15_quantile))
+        ndre_25_quantile = numpy.quantile(maskedArray_ndre, 0.25)
+        print("ndre_25_Quantile: {}".format(ndre_25_quantile))
+        ndre_75_quantile = numpy.quantile(maskedArray_ndre, 0.75)
+        print("ndre_75_Quantile: {}".format(ndre_75_quantile))
+        ndre_85_quantile = numpy.quantile(maskedArray_ndre, 0.85)
+        print("ndre_85_Quantile: {}".format(ndre_85_quantile))
 
         writeHTML('<ul>\
                 <li>Pixel count: {}</li>\
@@ -283,26 +331,39 @@ for index, row in data.iterrows():
                 <li>max NDVI value: {}</li>\
                 <li>mean NDVI value: {}</li>\
                 <li>median NDVI value: {}</li>\
+                <li>15 quantilee NDVI value: {}</li>\
+                <li>25 quantilee NDVI value: {}</li>\
+                <li>75 quantilee NDVI value: {}</li>\
+                <li>85 quantilee NDVI value: {}</li>\
                 <li>min NDRE value: {}</li>\
                 <li>max NDRE value: {}</li>\
                 <li>mean NDRE value: {}</li>\
                 <li>median NDRE value: {}</li>\
-                </ul>'.format(pixelCount,minNDVIValue,maxNDVIValue,meanNDVIValue,medianNDVIValue,minNDREValue,maxNDREValue,meanNDREValue,medianNDREValue))
+                <li>15 quantilee NDRE value: {}</li>\
+                <li>25 quantilee NDRE value: {}</li>\
+                <li>75 quantilee NDRE value: {}</li>\
+                <li>85 quantilee NDRE value: {}</li>\
+                </ul>'.format(pixelCount,minNDVIValue,maxNDVIValue,meanNDVIValue,medianNDVIValue, ndvi_15_quantile, ndvi_25_quantile, ndvi_75_quantile, ndvi_85_quantile,\
+                minNDREValue,maxNDREValue,meanNDREValue,medianNDREValue,ndre_15_quantile,ndre_25_quantile,ndre_75_quantile,ndre_85_quantile))
 
 
+        if  createCSVexport == True:
 
-        dataframe = pd.DataFrame({'id':[id], 'lat':[latitude], 'long':[longitude], 'timestamp': timestamp, \
-                        'pixelCount': [pixelCount], 'maxNDVI': [maxNDVIValue], 'minNDVI': [minNDVIValue],\
-                            'meanNDVI':[meanNDVIValue], 'medianNDVI': [medianNDVIValue], 'maxNDRE': [maxNDREValue],\
-                                'minNDRE':[minNDREValue], 'meanNDRE': [meanNDREValue], 'medianNDRE': [medianNDREValue]})
+            dataframe = pd.DataFrame({'id':[id], 'lat':[latitude], 'long':[longitude], 'timestamp': timestamp, \
+                            'pixelCount': [pixelCount], 'maxNDVI': [maxNDVIValue], 'minNDVI': [minNDVIValue],\
+                                'meanNDVI':[meanNDVIValue], 'medianNDVI': [medianNDVIValue], 'NDVI_15_Quantile' : [ndvi_15_quantile],\
+                                'NDVI_25_Quantile' : [ndvi_25_quantile], 'NDVI_75_Quantile' : [ndvi_75_quantile], 'NDVI_85_Quantile' : [ndvi_85_quantile],\
+                                'maxNDRE': [maxNDREValue],'minNDRE':[minNDREValue], 'meanNDRE': [meanNDREValue], 'medianNDRE': [medianNDREValue],\
+                                'NDRE_15_Quantile' : [ndre_15_quantile], 'NDRE_25_Quantile' : [ndre_25_quantile], 'NDRE_75_Quantile' : [ndre_75_quantile],\
+                                'NDRE_85_Quantile' : [ndre_85_quantile]})
 
-        if count == 0:
-            export_dataframe = dataframe
-        else:
-            export_dataframe = export_dataframe.append(dataframe, ignore_index=True)
-        count += 1
+            if count == 0:
+                export_dataframe = dataframe
+            else:
+                export_dataframe = export_dataframe.append(dataframe, ignore_index=True)
+            count += 1
 
-        export_dataframe.to_csv(output_src_string+'\export.csv', sep=';', index = False)
+            export_dataframe.to_csv(output_src_string+'\export.csv', sep=';', index = False)
 
     if createReport==True:
         htmlFile.close()
