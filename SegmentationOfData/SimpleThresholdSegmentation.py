@@ -28,22 +28,86 @@ def otsu_threshold(arrayValue):
     return th2, th3
 
 
+def get_highest_value_nearest_middle(array):
+    shape_array = array.shape
+    row_length = shape_array[0]
+    column_length = shape_array[1]
+
+    max_index_row = round(row_length / 2)
+    rest_length_row = row_length - max_index_row
+    max_index_column = round(column_length/2)
+    rest_length_column = column_length - max_index_column
+
+    row_steps_up = (1 - 0.6) / max_index_row
+    row_steps_down = (1 - 0.6) / rest_length_row
+    column_steps_up = (1 - 0.6) / max_index_column
+    column_steps_down = (1 - 0.6) / rest_length_column
+
+    rowpower = np.zeros(row_length)
+    columnpower = np.zeros(column_length)
+
+    count = 0
+    countNeg=0
+    for element in rowpower:
+        if(count<max_index_row):
+            rowpower[count] = ((count) * row_steps_up) + 0.6
+        else:
+            rowpower[count] = 1-((countNeg) * row_steps_down)
+            countNeg = countNeg + 1
+        count = count + 1
+
+    count = 0
+    countNeg=0
+    for element in columnpower:
+        if(count<max_index_column):
+            columnpower[count] = ((count) * column_steps_up) + 0.6
+        else:
+            columnpower[count] = 1-((countNeg) * column_steps_down)
+            countNeg = countNeg + 1
+        count = count + 1
+
+    maxValue = 0
+    row_index = 0
+    column_index = 0
+    i = 0
+    j = 0
+    for rowelement in rowpower:
+        for columnelement in columnpower:
+            tempvalue = rowelement * columnelement * array[j][i]
+            i += 1
+            if tempvalue > maxValue:
+                maxValue = tempvalue
+                row_index = i
+                column_index = j
+        j += 1
+        i = 0
+    return row_index, column_index
+
+
 def connectedSeedGrowing(arr):
 
     #convert array to image
     img = sitk.GetImageFromArray(arr)
     # find seed -> highest value
-    index = np.where(arr == np.amax(arr))
-    seed = np.array([index[1][0],index[0][0]], dtype='int').tolist()
+    #index = np.where(arr == np.amax(arr))
+    index = get_highest_value_nearest_middle(arr)
+    #seed = np.array([index[1][0],index[0][0]], dtype='int').tolist()
+    seed = np.array([index[0],index[1]], dtype='int').tolist()
     seg = sitk.Image(img.GetSize(), sitk.sitkUInt8)
     seg.CopyInformation(img)
     seg[seed] = 1
 
     #show if seed is in correct position
     #myshow(sitk.LabelOverlay(img, seg))
+    testarr=np.extract(arr!=0,arr)
+    quantile_75 = round(np.amax(testarr)*0.7)
+    #pyplot.hist(testarr)
+    #pyplot.show()
+    
+    #plot histogram
 
     #calculate threshold
-    seg_con = sitk.ConnectedThreshold(img, seedList=[seed],lower=120, upper=255)
+    seg_con = sitk.ConnectedThreshold(img, seedList=[seed],lower=quantile_75, upper=255)
 
     #clean up
     vectorRadius = (1, 1)
