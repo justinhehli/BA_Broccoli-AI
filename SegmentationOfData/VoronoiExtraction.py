@@ -125,10 +125,12 @@ for index, row in data.iterrows():
         export_dataframe = pd.DataFrame()
         count = 0
         for feature in features:
+            if count % 100 == 0:
+                myTeamsMessage.text("Brokkoli #{} will be thresholded".format(count+1))
+                myTeamsMessage.send()
             centroid_feature = centroids_features[count]
             print("Brokkoli Nr. {}".format(count+1))
-            myTeamsMessage.text("Brokkoli #{} will be thresholded".format(count+1))
-            myTeamsMessage.send()
+            
             # geo interface of the shape
             featureGeoInterface = feature.shape.__geo_interface__  
             geoJsonString = geojson.dumps(featureGeoInterface, sort_keys=True)
