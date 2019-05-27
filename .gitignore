@@ -269,15 +269,5 @@ __pycache__/
 
 #ignored files
 *.tif
-ExplorativeDataAnalysis/pixelCount_under02Quant_IDs_2019-05-09.csv
-ExplorativeDataAnalysis/pixelCount_NotableImages_2019-04-18.html
-ExplorativeDataAnalysis/pixelCount_NotableImages_2019-04-25.html
-ExplorativeDataAnalysis/pixelCount_NotableImages_2019-05-01.html
-ExplorativeDataAnalysis/pixelCount_NotableImages_2019-05-09.html
-ExplorativeDataAnalysis/pixelCount_over98Quant_IDs_2019-04-18.csv
-ExplorativeDataAnalysis/pixelCount_over98Quant_IDs_2019-04-25.csv
-ExplorativeDataAnalysis/pixelCount_over98Quant_IDs_2019-05-01.csv
-ExplorativeDataAnalysis/pixelCount_over98Quant_IDs_2019-05-09.csv
-ExplorativeDataAnalysis/pixelCount_under02Quant_IDs_2019-04-18.csv
-ExplorativeDataAnalysis/pixelCount_under02Quant_IDs_2019-04-25.csv
-ExplorativeDataAnalysis/pixelCount_under02Quant_IDs_2019-05-01.csv
+ExplorativeDataAnalysis/*.csv
+ExplorativeDataAnalysis/*.html
