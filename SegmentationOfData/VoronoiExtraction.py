@@ -77,8 +77,8 @@ if(createCSVexport == False and Data2SQL == True):
 #open images
 #The only things that needs to be changed are the following 3 values. Dont forget to update the time!
 if(useCSV == False):
-    ndvi_src_string = r'\\fs004\ice\lehre\bachelorarbeiten\2019\Pflanzen\Drohnenaufnahmen\20190524\export\20190524RMC_index_ndvi_modified.tif'
-    ndre_src_string = r'\\fs004\ice\lehre\bachelorarbeiten\2019\Pflanzen\Drohnenaufnahmen\20190524\export\20190524RMC_index_ndre_modified.tif'
+    ndvi_src_string = r'\\fs004\ice\lehre\bachelorarbeiten\2019\Pflanzen\Drohnenaufnahmen\20190604\export\20190604RMC_index_ndvi_modified.tif'
+    ndre_src_string = r'\\fs004\ice\lehre\bachelorarbeiten\2019\Pflanzen\Drohnenaufnahmen\20190604\export\20190604RMC_index_ndre_modified.tif'
     timestamp = '2019-05-24'
     data = pd.DataFrame({'ndviString':[ndvi_src_string], 'ndreString':[ndre_src_string], 'timestamp':[timestamp]})
 else:
