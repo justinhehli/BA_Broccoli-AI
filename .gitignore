@@ -264,3 +264,10 @@ __pycache__/
 #ignored directories
 /DataAnalysisEnvironment/*
 /DataAnalysisVirtualEnv/*
+/.vscode/*
+/SegmentationOfData/export*
+
+#ignored files
+*.tif
+ExplorativeDataAnalysis/*.csv
+ExplorativeDataAnalysis/*.html
